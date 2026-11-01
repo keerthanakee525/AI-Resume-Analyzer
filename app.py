@@ -1,105 +1,106 @@
 import streamlit as st
 from pypdf import PdfReader
-import re
 import plotly.graph_objects as go
+import re
+
+# PAGE CONFIGURATION
 st.set_page_config(
     page_title="AI Resume Analyzer",
-    page_icon="📄"
+    page_icon="📄",
+    layout="wide"
 )
+
+# CUSTOM DESIGN
 st.markdown("""
 <style>
- stApp {
+.stApp {
     background-color: #f4f6ff;
 }
-h1 {
+h1, h2, h3 {
     color: #4b0082;
-    text-align: center;
 }
-h2, h3 {
-    color: #673ab7;
-}
-.stButton > button {
-    background-color: #673ab7;
+.stButton>button {
+    background-color: #6c42d8;
     color: white;
     border-radius: 10px;
-    padding: 10px 20px;
+    width: 100%;
 }
-.stButton > button:hover {
-    background-color: #512da8;
-    color: white;
-}
-
-/* Website Background */
-stApp {
- background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
-}
-
-
-    color: #4527a0;
-    text-align: center;
-    font-weight: bold;
-
-
-/* Buttons */
- stButton > button {
-    background-color: #673ab7;
-    color: white;
-    border-radius: 12px;
-    padding: 10px 25px;
-    font-weight: bold;
-}
-
-/* Button Hover Effect */
-.stButton > button:hover {
-    background-color: #512da8;
-    color: white;
-}
-
-/* Section Headings */
-h2, h3 {
-    color: #283593;
-}
-
 </style>
 """, unsafe_allow_html=True)
-st.title("🤖 AI Resume Analyzer")
-st.write("Upload your resume and discover your skill gaps!")
 
-# Job roles and required skills
+# SKILLS DATABASE
 job_skills = {
     "Software Developer": [
-        "python", "java", "sql", "html",
-        "git", "javascript", "data structures"
+        "Python", "Java", "C", "C++", "SQL",
+        "Data Structures", "Algorithms",
+        "HTML", "CSS", "JavaScript",
+        "Git", "OOP", "Problem Solving"
     ],
+
     "Web Developer": [
-        "html", "css", "javascript",
-        "python", "git"
+        "HTML", "CSS", "JavaScript",
+        "React", "Node.js", "Python",
+        "SQL", "Git", "REST API"
     ],
+
     "Data Analyst": [
-        "python", "sql", "excel",
-        "power bi", "statistics"
+        "Python", "SQL", "Excel",
+        "Power BI", "Tableau",
+        "Statistics", "Pandas",
+        "NumPy", "Data Visualization"
     ],
+
     "Cybersecurity Analyst": [
-        "python", "linux", "networking",
-        "cybersecurity", "sql"
+        "Python", "Linux", "Networking",
+        "Cryptography", "Ethical Hacking",
+        "Wireshark", "SQL", "Cybersecurity"
+    ],
+
+    "AI/ML Engineer": [
+        "Python", "Machine Learning",
+        "Deep Learning", "NumPy",
+        "Pandas", "TensorFlow",
+        "Scikit-learn", "Statistics"
     ]
 }
 
-# Get user details
-name = st.text_input("Enter your name")
+# LEARNING RESOURCES
+learning_links = {
+    "Python": "https://www.python.org/about/gettingstarted/",
+    "Java": "https://www.w3schools.com/java/",
+    "C": "https://www.learn-c.org/",
+    "C++": "https://www.learncpp.com/",
+    "SQL": "https://www.w3schools.com/sql/",
+    "HTML": "https://www.w3schools.com/html/",
+    "CSS": "https://www.w3schools.com/css/",
+    "JavaScript": "https://www.w3schools.com/js/",
+    "React": "https://react.dev/learn",
+    "Node.js": "https://nodejs.org/en/learn",
+    "Git": "https://git-scm.com/doc",
+    "Data Structures": "https://www.geeksforgeeks.org/data-structures/",
+    "Algorithms": "https://www.geeksforgeeks.org/fundamentals-of-algorithms/",
+    "Machine Learning": "https://www.coursera.org/learn/machine-learning",
+    "Deep Learning": "https://www.deeplearning.ai/",
+    "TensorFlow": "https://www.tensorflow.org/tutorials",
+    "Scikit-learn": "https://scikit-learn.org/stable/tutorial/index.html",
+    "NumPy": "https://numpy.org/learn/",
+    "Pandas": "https://pandas.pydata.org/docs/getting_started/",
+    "Excel": "https://support.microsoft.com/excel",
+    "Power BI": "https://learn.microsoft.com/en-us/power-bi/",
+    "Tableau": "https://www.tableau.com/learn/training",
+    "Statistics": "https://www.khanacademy.org/math/statistics-probability",
+    "Linux": "https://ubuntu.com/tutorials",
+    "Networking": "https://www.cisco.com/",
+    "Cryptography": "https://www.coursera.org/learn/crypto",
+    "Ethical Hacking": "https://www.netacad.com/",
+    "Wireshark": "https://www.wireshark.org/docs/",
+    "Cybersecurity": "https://www.cisa.gov/cybersecurity",
+    "REST API": "https://www.postman.com/api-platform/api-documentation/",
+    "Problem Solving": "https://www.hackerrank.com/",
+    "OOP": "https://www.geeksforgeeks.org/object-oriented-programming-oops-concept-in-java/"
+}
 
-role = st.selectbox(
-    "Select your target job role",
-    list(job_skills.keys())
-)
-
-# Resume upload
-uploaded_file = st.file_uploader(
-    "📄 Upload your Resume (PDF)",
-    type=["pdf"]
-)
-
-# Extract text from PDF
+# EXTRACT RESUME TEXT
 def extract_text(pdf_file):
     reader = PdfReader(pdf_file)
     text = ""
@@ -107,213 +108,318 @@ def extract_text(pdf_file):
     for page in reader.pages:
         text += page.extract_text() or ""
 
-    return text.lower()
+    return text
 
-# Detect skills
-def detect_skills(text, skills):
-    detected = []
 
-    for skill in skills:
+# DETECT SKILLS
+def detect_skills(text, skill_list):
+    found = []
+
+    for skill in skill_list:
         pattern = r"(?<!\w)" + re.escape(skill) + r"(?!\w)"
 
         if re.search(pattern, text, re.IGNORECASE):
-            detected.append(skill)
+            found.append(skill)
 
-    return detected
+    return found
 
-# Analyze resume
-if st.button("🔍 Analyze My Resume"):
+
+# LEARNING ROADMAP
+def create_roadmap(missing_skills):
+
+    roadmap = []
+
+    for index, skill in enumerate(missing_skills, 1):
+
+        link = learning_links.get(
+            skill,
+            "https://www.google.com/search?q=" + skill + "+tutorial"
+        )
+
+        roadmap.append({
+            "week": index,
+            "skill": skill,
+            "link": link
+        })
+
+    return roadmap
+
+
+# MAIN APPLICATION
+st.title("📄 AI Resume Analyzer & Skill Gap Detector")
+
+st.write(
+    "Analyze your resume, identify missing skills, "
+    "and discover what you need to learn for your dream job."
+)
+
+st.info(
+    "This application uses keyword-based resume analysis "
+    "to provide skill recommendations."
+)
+
+# USER INPUT
+st.subheader("👤 Personal Information")
+
+name = st.text_input("Enter your name")
+
+role = st.selectbox(
+    "Select your target job role",
+    list(job_skills.keys())
+)
+
+st.subheader("📋 Job Description")
+
+job_description = st.text_area(
+    "Paste the job description here (optional)",
+    height=150,
+    placeholder="Paste the company's required skills and job description..."
+)
+
+st.subheader("📁 Upload Resume")
+
+uploaded_file = st.file_uploader(
+    "Upload your resume in PDF format",
+    type=["pdf"]
+)
+
+# ANALYSIS BUTTON
+if st.button("🚀 Analyze My Resume"):
 
     if not name.strip():
         st.warning("Please enter your name.")
 
-    elif uploaded_file is None:
-        st.warning("Please upload your PDF resume.")
+    elif not uploaded_file:
+        st.warning("Please upload your resume PDF.")
 
     else:
+
         try:
             resume_text = extract_text(uploaded_file)
 
             if not resume_text.strip():
                 st.error(
-                    "Could not read the PDF text. "
-                    "Please upload a text-based PDF."
+                    "No readable text found. Please upload a text-based PDF."
                 )
 
             else:
-                required_skills = job_skills[role]
 
-                matched = detect_skills(
+                # GET REQUIRED SKILLS
+                if job_description.strip():
+                    required_skills = detect_skills(
+                        job_description,
+                        list(learning_links.keys())
+                    )
+
+                    if not required_skills:
+                        required_skills = job_skills[role]
+
+                        st.warning(
+                            "No recognized skills found in the job description. "
+                            "Using the selected job role instead."
+                        )
+                else:
+                    required_skills = job_skills[role]
+
+                # RESUME SKILLS
+                resume_skills = detect_skills(
                     resume_text,
-                    required_skills
+                    list(learning_links.keys())
                 )
+
+                # MATCHING
+                matched = [
+                    skill for skill in required_skills
+                    if skill in resume_skills
+                ]
 
                 missing = [
                     skill for skill in required_skills
-                    if skill not in matched
+                    if skill not in resume_skills
                 ]
 
+                total = len(required_skills)
+
                 percentage = (
-                    len(matched) / len(required_skills)
-                ) * 100
-                # Skill Match Donut Chart
-                fig = go.Figure(data=[go.Pie(
-    labels=["Matched Skills", "Missing Skills"],
-    values=[len(matched), len(missing)],
-    hole=0.6,
-    marker=dict(colors=["#4CAF50", "#FF5252"])
-)])
-
-                fig.update_layout(
-    title="Skill Match Analysis",
-    title_x=0.5
-)
-
-                st.plotly_chart(fig, use_container_width=True)
-
-                st.success(
-                    f"Resume Analysis for {name}"
+                    (len(matched) / total) * 100
+                    if total > 0 else 0
                 )
 
-                st.subheader("📊 Skill Match")
-                st.progress(percentage / 100)
-                st.write(f"{percentage:.2f}% Match")
+                # RESULTS
+                st.divider()
 
-                st.subheader("✅ Skills Found")
+                st.header("📊 Resume Analysis Results")
+
+                st.write("Candidate:", name)
+                st.write("Target Role:", role)
+
+                col1, col2, col3 = st.columns(3)
+
+                col1.metric(
+                    "Skill Match",
+                    f"{percentage:.1f}%"
+                )
+
+                col2.metric(
+                    "Matched Skills",
+                    len(matched)
+                )
+
+                col3.metric(
+                    "Missing Skills",
+                    len(missing)
+                )
+
+                # PROGRESS BAR
+                st.subheader("🎯 Job Readiness")
+
+                st.progress(int(percentage))
+
+                if percentage >= 75:
+                    st.success(
+                        "Excellent! Your resume matches many of the required skills."
+                    )
+
+                elif percentage >= 40:
+                    st.warning(
+                        "Good start! Work on your missing skills to improve your profile."
+                    )
+
+                else:
+                    st.info(
+                        "Keep learning! Focus on building the important skills for this role."
+                    )
+
+                # MATCHED SKILLS
+                st.subheader("✅ Matched Skills")
+
                 if matched:
-                    for skill in matched:
-                        st.write("✔", skill.title())
+                    st.write(", ".join(matched))
                 else:
-                    st.write("No required skills detected.")
+                    st.write("No matching skills detected.")
 
-                st.subheader("📚 Skills to Improve")
+                # MISSING SKILLS
+                st.subheader("❌ Missing Skills")
+
                 if missing:
-                    for skill in missing:
-                        st.write("➜", skill.title())
+                    st.write(", ".join(missing))
                 else:
-                    st.write("All listed skills detected!")
-# Skill Analysis Chart
-                st.subheader("📊 Skill Analysis Chart")
+                    st.success("You have all the detected required skills!")
+
+                # CHART
+                st.subheader("📈 Skill Match Analysis")
 
                 fig = go.Figure(data=[
-                    go.Bar(
-                        x=["Matched Skills", "Missing Skills"],
-                        y=[len(matched), len(missing)],
-                        marker_color=["#673AB7", "#FF9800"],
-                        text=[len(matched), len(missing)],
-                        textposition="auto"
+                    go.Pie(
+                        labels=["Matched Skills", "Missing Skills"],
+                        values=[len(matched), len(missing)],
+                        hole=0.55
                     )
                 ])
 
                 fig.update_layout(
-                    title="Your Skill Gap Analysis",
-                    xaxis_title="Skill Category",
-                    yaxis_title="Number of Skills",
-                    template="plotly_white"
+                    title="Resume Skill Analysis",
+                    showlegend=True
                 )
 
-                st.plotly_chart(fig, use_container_width=True)
-                st.subheader("💡 Recommendations")
+                st.plotly_chart(
+                    fig,
+                    use_container_width=True
+                )
 
-                if percentage >= 80:
-                    st.success(
-                        "Great skill match! "
-                        "Keep improving your knowledge."
+                # LEARNING ROADMAP
+                st.divider()
+
+                st.header("📚 Personalized Learning Roadmap")
+
+                if missing:
+
+                    st.write(
+                        "Follow this suggested learning order "
+                        "to improve your job readiness."
                     )
-                elif percentage >= 50:
-                    st.info(
-                        "Good progress! Focus on missing skills."
-                    )
+
+                    roadmap = create_roadmap(missing)
+
+                    for item in roadmap:
+
+                        st.markdown(
+                            f"### Week {item['week']}: {item['skill']}"
+                        )
+
+                        st.markdown(
+                            f"[Start Learning]({item['link']})"
+                        )
+
                 else:
-                    st.warning(
-                        "Build your skills step by step."
+                    st.success(
+                        "Great! No missing skills were detected "
+                        "from the selected requirements."
                     )
 
-                st.caption(
-                    "This is a basic keyword-based resume "
-                    "analyzer, not a full AI assessment. "
-                    "Missing skills mean they were not "
-                    "detected in the resume."
-                )
-                st.caption(
-                    "This is a basic keyword-based resume "
-                    "analyzer, not a full AI assessment. "
-                    "Missing skills mean they were not "
-                    "detected in the resume."
-                )
+                # RECOMMENDATIONS
+                st.divider()
 
-                # Learning Resources code ಇಲ್ಲಿ
+                st.header("💡 Career Recommendations")
 
-                # Download Report code ಇಲ್ಲಿ
+                if missing:
+                    st.write(
+                        "1. Start learning the missing skills."
+                    )
+                    st.write(
+                        "2. Build practical projects using those skills."
+                    )
+                    st.write(
+                        "3. Add your projects and achievements to your resume."
+                    )
+                    st.write(
+                        "4. Practice technical and interview questions."
+                    )
 
-        except Exception as e:
-            st.error(
-                "Unable to read this PDF. "
-                "Please try another valid PDF."
-            )
+                else:
+                    st.write(
+                        "Continue building projects and preparing for interviews."
+                    )
 
-                # ಇಲ್ಲಿ ಹೊಸ code paste ಮಾಡು
-
-        except Exception as e:
-            st.error(
-                "Unable to read this PDF. "
-                "Please try another valid PDF."
-            )
-      # Learning Resources
-st.subheader("📚 Learning Resources")
-
-learning_links = {
-    "python": "https://www.learnpython.org/",
-    "java": "https://www.w3schools.com/java/",
-    "sql": "https://www.w3schools.com/sql/",
-    "html": "https://www.w3schools.com/html/",
-    "css": "https://www.w3schools.com/css/",
-    "javascript": "https://www.w3schools.com/js/",
-    "react": "https://react.dev/learn",
-    "machine learning": "https://developers.google.com/machine-learning/crash-course"
-}
-
-if "missing" in locals():
-    for skill in missing:
-        link = learning_links.get(skill.lower())
-        if link:
-            st.markdown(f"📖 [{skill.title()}]({link})")
-        else:
-            st.write(f"📖 Learn more about {skill.title()}")
-
-# Career Recommendations
-st.subheader("💡 Career Recommendations")
-
-if "percentage" in locals():
-    if percentage >= 80:
-        st.success("Excellent skill match! You are well prepared.")
-    elif percentage >= 50:
-        st.info("Good progress! Improve your missing skills.")
-    else:
-        st.warning("Focus on learning missing skills to improve your job readiness.")
-
-# Download Report
-st.subheader("📄 Download Analysis Report")
-
-if all(name in locals() for name in ["matched", "missing", "percentage"]):
-    report = f"""
+                # DOWNLOAD REPORT
+                report = f"""
 AI RESUME ANALYZER REPORT
 
-Skill Match: {percentage:.2f}%
+Candidate Name: {name}
+Target Job Role: {role}
 
-Matched Skills:
+SKILL MATCH: {percentage:.2f}%
+
+MATCHED SKILLS:
 {', '.join(matched)}
 
-Missing Skills:
+MISSING SKILLS:
 {', '.join(missing)}
 
-Recommendation:
-Improve missing skills to increase your job readiness.
+RECOMMENDATIONS:
+Build your missing skills and work on practical projects.
+
+Note: This is a basic keyword-based resume analysis.
+It is not a complete AI assessment.
 """
 
-    st.download_button(
-        label="📥 Download Report",
-        data=report,
-        file_name="resume_analysis_report.txt",
-        mime="text/plain"
-    )      
+                st.download_button(
+                    label="📥 Download Analysis Report",
+                    data=report,
+                    file_name="resume_analysis_report.txt",
+                    mime="text/plain"
+                )
+
+        except Exception as e:
+
+            st.error(
+                f"Something went wrong while analyzing your resume: {e}"
+            )
+
+
+# FOOTER
+st.divider()
+
+st.markdown(
+    "Developed with ❤️ | AI Resume Analyzer & Skill Gap Detector"
+)
