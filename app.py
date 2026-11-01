@@ -5,6 +5,38 @@ import re
 
 # PAGE CONFIGURATION
 st.set_page_config(
+    st.markdown("""
+<style>
+.stApp {
+    background: linear-gradient(135deg, #eef2ff, #f8fafc);
+}
+h1 {
+    color: #312e81;
+    font-weight: 800;
+}
+h2, h3 {
+    color: #4338ca;
+}
+.stButton>button {
+    background: #4f46e5;
+    color: white;
+    border-radius: 10px;
+    border: none;
+    padding: 10px 24px;
+    font-weight: bold;
+}
+.stButton>button:hover {
+    background: #3730a3;
+    color: white;
+}
+div[data-testid="stMetric"] {
+    background: white;
+    padding: 18px;
+    border-radius: 12px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+}
+</style>
+""", unsafe_allow_html=True)
     page_title="AI Resume Analyzer",
     page_icon="📄",
     layout="wide"
